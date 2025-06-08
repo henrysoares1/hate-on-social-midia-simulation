@@ -1,4 +1,5 @@
 breed [ users user ]
+directed-link-breed [ follows-links follows-link ]
 
 users-own [
    hate-core            ; how much hate this person has
@@ -14,24 +15,44 @@ users-own [
 
 
 to setup-users
-  create-users 5 [
+  create-users 15 [
     setxy random-xcor random-ycor                    ; set users in any place of the map
     set size 2                                       ; set size of the users
     set shape "person"                               ; set shape of the turtles to person
 
     set hate-core random-float 10
-    set followers 0
-    set following 0
+    set followers []
+    set following []
     set post-freq random-float 10
 
     set has-posted? false
   ]
 end
 
+to link-usuarios
+  ask users [
+    let proximos other users in-radius 5
+    let num-conexoes random 3
+
+    if any? proximos [
+      let alguns-proximos n-of min (list num-conexoes count proximos) proximos
+
+      foreach (list alguns-proximos) [
+        follower ->
+          create-follows-links-to follower
+          set following lput follower following
+          ask follower [
+            set followers lput myself followers
+          ]
+      ]
+    ]
+  ]
+end
 
 to setup
   clear-all
   setup-users
+  link-usuarios
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
