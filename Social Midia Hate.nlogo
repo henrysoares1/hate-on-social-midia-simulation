@@ -15,7 +15,7 @@ users-own [
 
 
 to setup-users
-  create-users 15 [
+  create-users 25 [
     setxy random-xcor random-ycor                    ; set users in any place of the map
     set size 2                                       ; set size of the users
     set shape "person"                               ; set shape of the turtles to person
@@ -31,18 +31,20 @@ end
 
 to link-usuarios
   ask users [
-    let proximos other users in-radius 5
-    let num-conexoes random 3
+    let proximos other users in-radius 10 ; link length
+    let num-conexoes random 3 ; link count
 
     if any? proximos [
       let alguns-proximos n-of min (list num-conexoes count proximos) proximos
 
-      foreach (list alguns-proximos) [
+      foreach sort alguns-proximos [
         follower ->
-          create-follows-links-to follower
-          set following lput follower following
-          ask follower [
-            set followers lput myself followers
+          if not [follows-link-neighbor? myself] of follower [
+            create-follows-link-to follower
+            set following lput follower following
+            ask follower [
+              set followers lput myself followers
+            ]
           ]
       ]
     ]
@@ -58,11 +60,11 @@ end
 GRAPHICS-WINDOW
 311
 15
-748
-453
+979
+684
 -1
 -1
-13.0
+20.0
 1
 10
 1
