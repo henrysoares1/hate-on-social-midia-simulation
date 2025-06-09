@@ -51,6 +51,20 @@ to link-usuarios
   ]
 end
 
+to user-post [poster]
+  ask poster [
+    set has-posted? true
+    set color red
+
+    foreach followers [
+      follower ->
+        ask follower [
+          set color yellow
+        ]
+    ]
+  ]
+end
+
 to setup
   clear-all
   setup-users
