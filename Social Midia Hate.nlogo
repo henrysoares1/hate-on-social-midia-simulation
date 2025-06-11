@@ -87,6 +87,12 @@ to set-hate-color
   ]
 end
 
+to remove-isolated-users
+  ask users with [ length following = 0 ] [
+    die
+  ]
+end
+
 to setup
   clear-all
   setup-users
