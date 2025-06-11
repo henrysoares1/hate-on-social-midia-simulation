@@ -26,6 +26,8 @@ to setup-users
     set post-freq random-float 10
 
     set has-posted? false
+
+    set-hate-color
   ]
 end
 
@@ -65,6 +67,26 @@ to user-post [poster]
   ]
 end
 
+to set-hate-color
+  ifelse hate-core >= 9.0 [
+    set color red
+  ] [
+    ifelse hate-core >= 7.0 [
+      set color orange
+    ] [
+      ifelse hate-core >= 5.0 [
+        set color yellow
+      ] [
+        ifelse hate-core >= 3.0 [
+          set color green
+        ] [
+          set color blue
+        ]
+      ]
+    ]
+  ]
+end
+
 to setup
   clear-all
   setup-users
@@ -85,8 +107,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-1
-1
+0
+0
 1
 -16
 16
