@@ -88,15 +88,37 @@ to set-hate-color
 end
 
 to remove-isolated-users
-  ask users with [ length following = 0 ] [
+  ask users with [ (length following = 0) and (length followers = 0) ] [
     die
   ]
 end
+
+
+to go
+  ask users [
+
+    if random-float 10 < post-freq and not has-posted? [
+      user-post self
+    ]
+  ]
+
+  ask users [
+    set-hate-color
+  ]
+
+  if (ticks mod 10) = 0 [
+    remove-isolated-users
+  ]
+
+  tick
+end
+
 
 to setup
   clear-all
   setup-users
   link-usuarios
+  reset-ticks
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -134,6 +156,23 @@ BUTTON
 Setup
 setup
 NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+69
+147
+132
+180
+Go
+go
+T
 1
 T
 OBSERVER
