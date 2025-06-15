@@ -51,6 +51,7 @@ end
 
 to user-post [poster]
   ask poster [
+    ; color of who posted
     set color violet
 
     foreach followers [
@@ -64,7 +65,7 @@ to user-post [poster]
           if hate-core > 10 [ set hate-core 10 ]
           if hate-core < 0 [ set hate-core 0 ]
 
-          ;; Cor de quem recebeu o post
+          ; color of who recieved the post
           set color pink
         ]
       ]
@@ -92,10 +93,7 @@ to set-hate-color
 end
 
 to remove-isolated-users
-  ask users with [
-    (count follows-link-neighbors = 0) and
-    (count follows-link-neighbors-of me = 0)
-  ] [
+  ask users with [ (length following = 0) and (length followers = 0) ] [
     die
   ]
 end
@@ -105,7 +103,6 @@ to go
 
   ; users post something
   ask users [
-
     if random-float 10 < post-freq [
       user-post self
     ]
