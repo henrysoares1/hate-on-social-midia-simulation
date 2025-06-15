@@ -59,7 +59,7 @@ to user-post [poster]
 
         ask follower [
 
-          let influence ([hate-core] of poster - hate-core) * 0.2  ; 20% da diferença
+          let influence ([hate-core] of poster - hate-core) * 0.2  ; 20% of diferente bettewen poster hate-core and receiver hate-core
           set hate-core hate-core + influence
 
           if hate-core > 10 [ set hate-core 10 ]
