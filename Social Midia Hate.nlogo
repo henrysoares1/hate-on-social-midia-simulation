@@ -114,6 +114,7 @@ to go
     set-hate-color
   ]
 
+  tick
   ; remove users without links
   if (ticks mod 10) = 0 [
     remove-isolated-users
