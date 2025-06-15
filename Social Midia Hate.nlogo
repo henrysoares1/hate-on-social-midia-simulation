@@ -8,8 +8,6 @@ users-own [
    following            ; who this user is following (it has to be a list)
    post-freq            ; determines how much this user posts (0 = less chance to post, 10 = more chance to post)
 
-   has-posted?          ; true if user has posted
-
 ]
 
 
@@ -24,8 +22,6 @@ to setup-users
     set followers []
     set following []
     set post-freq random-float 10
-
-    set has-posted? false
 
     set-hate-color
   ]
@@ -55,15 +51,24 @@ end
 
 to user-post [poster]
   ask poster [
-    set has-posted? true
-    set color red
+    ; color of who posted
+    set color violet
 
     foreach followers [
       follower ->
+
         ask follower [
-          set color yellow
+
+          let influence ([hate-core] of poster - hate-core) * 0.2  ; 20% of diferente bettewen poster hate-core and receiver hate-core
+          set hate-core hate-core + influence
+
+          if hate-core > 10 [ set hate-core 10 ]
+          if hate-core < 0 [ set hate-core 0 ]
+
+          ; color of who recieved the post
+          set color pink
         ]
-    ]
+      ]
   ]
 end
 
@@ -95,17 +100,21 @@ end
 
 
 to go
-  ask users [
 
-    if random-float 10 < post-freq and not has-posted? [
+  ; users post something
+  ask users [
+    if random-float 10 < post-freq [
       user-post self
     ]
   ]
 
+  tick
+  ; adjust users hate colors
   ask users [
     set-hate-color
   ]
 
+  ; remove users without links
   if (ticks mod 10) = 0 [
     remove-isolated-users
   ]
@@ -142,8 +151,8 @@ GRAPHICS-WINDOW
 16
 -16
 16
-0
-0
+1
+1
 1
 ticks
 30.0
