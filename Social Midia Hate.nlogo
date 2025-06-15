@@ -13,9 +13,9 @@ users-own [
 
 
 to setup-users
-  create-users 25 [
+  create-users 50 [
     setxy random-xcor random-ycor                    ; set users in any place of the map
-    set size 2                                       ; set size of the users
+    set size 1.5                                       ; set size of the users
     set shape "person"                               ; set shape of the turtles to person
 
     set hate-core random-float 10
@@ -98,6 +98,31 @@ to remove-isolated-users
   ]
 end
 
+to follow-user [follower followed]
+  ask follower [
+    if (follower != followed) and (not member? followed following) and (distance followed <= 10) [
+      create-follows-link-to followed
+      set following lput followed following
+
+      ask followed [
+        set followers lput follower followers
+      ]
+    ]
+  ]
+end
+
+to follow-behavior
+  ask users [
+    if random-float 100 < 5 [  ; % of chance to follow
+      let possible-follow other users with [not member? self followers and distance myself <= 10]
+      if any? possible-follow [
+        let chosen one-of possible-follow
+        follow-user self chosen
+      ]
+    ]
+  ]
+end
+
 
 to go
 
@@ -107,6 +132,9 @@ to go
       user-post self
     ]
   ]
+
+  ; follow new users
+  follow-behavior
 
   tick
   ; adjust users hate colors
@@ -128,6 +156,7 @@ to setup
   clear-all
   setup-users
   link-usuarios
+  layout-spring users follows-links 1 5 1
   reset-ticks
 end
 @#$#@#$#@
