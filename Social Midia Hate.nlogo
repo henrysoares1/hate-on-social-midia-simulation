@@ -6,6 +6,7 @@ users-own [
 
    followers            ; who is following this user (it has to be a list)
    following            ; who this user is following (it has to be a list)
+   blocked              ; who this user is blocking (it has to be a list)
    post-freq            ; determines how much this user posts (0 = less chance to post, 10 = more chance to post)
 
 ]
@@ -21,6 +22,7 @@ to setup-users
     set hate-core random-float 10
     set followers []
     set following []
+    set blocked []
     set post-freq random-float 10
 
     set-hate-color
@@ -67,22 +69,25 @@ to user-post [poster]
 
           ; color of who recieved the post
           set color pink
+
+          ; chance to block poster
+          block-user self poster
         ]
       ]
   ]
 end
 
 to set-hate-color
-  ifelse hate-core >= 9.0 [
+  ifelse hate-core >= 8.0 [
     set color red
   ] [
-    ifelse hate-core >= 7.0 [
+    ifelse hate-core >= 6.0 [
       set color orange
     ] [
-      ifelse hate-core >= 5.0 [
+      ifelse hate-core >= 4.0 [
         set color yellow
       ] [
-        ifelse hate-core >= 3.0 [
+        ifelse hate-core >= 2.0 [
           set color green
         ] [
           set color blue
@@ -100,7 +105,7 @@ end
 
 to follow-user [follower followed]
   ask follower [
-    if (follower != followed) and (not member? followed following) and (distance followed <= 10) [
+    if (follower != followed) and (not member? followed following) and (distance followed <= 10) and (not member? followed blocked) and (not member? follower [blocked] of followed)[
       create-follows-link-to followed
       set following lput followed following
 
@@ -118,6 +123,28 @@ to follow-behavior
       if any? possible-follow [
         let chosen one-of possible-follow
         follow-user self chosen
+      ]
+    ]
+  ]
+end
+
+to block-user [receiver poster]
+  let hate-difference abs(hate-core - [hate-core] of poster)
+  if (hate-difference >= (hate-core * 0.5)) [
+    if random-float 100 <= 50 [ ; 50% chance of blocking
+      ; add to blocked list
+      set blocked lput poster blocked
+
+      ; remove follow
+      if member? poster following [
+        set following remove poster following
+        ask poster [
+          set followers remove receiver followers
+        ]
+        ; remove link
+        ask follows-link-with poster [
+          die
+        ]
       ]
     ]
   ]
