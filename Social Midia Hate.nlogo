@@ -15,9 +15,9 @@ users-own [
 
 
 to setup-users
-  create-users 50 [
+  create-users initial-users [
     setxy random-xcor random-ycor                    ; set users in any place of the map
-    set size 1.5                                       ; set size of the users
+    set size 1                                      ; set size of the users
     set shape "person"                               ; set shape of the turtles to person
 
     set hate-core random-float 10
@@ -33,7 +33,7 @@ end
 
 to link-usuarios
   ask users [
-    let proximos other users in-radius 10 ; link length
+    let proximos other users in-radius user-radius-link-follow ; link length
     let num-conexoes random 3 ; link count
 
     if any? proximos [
@@ -56,21 +56,21 @@ end
 to user-post [poster]
   ask poster [
     ; color of who posted
-    set color violet
+    if post-colors [set color violet]
 
     foreach followers [
       follower ->
 
         ask follower [
 
-          let influence ([hate-core] of poster - hate-core) * 0.2  ; 20% of diferente bettewen poster hate-core and receiver hate-core
+          let influence ([hate-core] of poster - hate-core) * hate-core-rate  ; 20% of diferente bettewen poster hate-core and receiver hate-core
           set hate-core hate-core + influence
 
           if hate-core > 10 [ set hate-core 10 ]
           if hate-core < 0 [ set hate-core 0 ]
 
           ; color of who recieved the post
-          set color pink
+          if post-colors [set color pink]
 
           ; chance to block poster
           block-user self poster
@@ -107,7 +107,7 @@ end
 
 to follow-user [follower followed]
   ask follower [
-    if (follower != followed) and (not member? followed following) and (distance followed <= 10) and (not member? followed blocked) and (not member? follower [blocked] of followed) and ((ticks - [birth-tick] of followed) < 50)[
+    if (follower != followed) and (not member? followed following) and (distance followed <= user-radius-link-follow) and (not member? followed blocked) and (not member? follower [blocked] of followed) and ((ticks - [birth-tick] of followed) < max-user-tick-to-follow)[
       create-follows-link-to followed
       set following lput followed following
 
@@ -120,8 +120,8 @@ end
 
 to follow-behavior
   ask users [
-    if random-float 100 < 5 [  ; % of chance to follow
-      let possible-follow other users with [not member? self followers and distance myself <= 10]
+    if random-float 100 <= chance-to-follow [  ; % of chance to follow
+      let possible-follow other users with [not member? self followers and distance myself <= user-radius-link-follow]
       if any? possible-follow [
         let chosen one-of possible-follow
         follow-user self chosen
@@ -132,8 +132,8 @@ end
 
 to block-user [receiver poster]
   let hate-difference abs(hate-core - [hate-core] of poster)
-  if (hate-difference >= (hate-core * 0.5)) [
-    if random-float 100 <= 50 [ ; 50% chance of blocking
+  if (hate-difference >= (hate-core * hate-difference-to-block)) [
+    if random-float 100 <= chance-to-block [ ; 50% chance of blocking
       ; add to blocked list
       set blocked lput poster blocked
 
@@ -157,7 +157,7 @@ to go
 
   ; users post something
   ask users [
-    if random-float 10 < post-freq [
+    if post-freq > random-float 10[
       user-post self
     ]
   ]
@@ -217,10 +217,10 @@ ticks
 30.0
 
 BUTTON
-67
-104
-131
-137
+81
+138
+145
+171
 Setup
 setup
 NIL
@@ -234,10 +234,10 @@ NIL
 1
 
 BUTTON
-69
-147
-132
-180
+163
+138
+226
+171
 Go
 go
 T
@@ -249,6 +249,122 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+55
+205
+260
+238
+max-user-tick-to-follow
+max-user-tick-to-follow
+0
+1000
+100.0
+1
+1
+ticks
+HORIZONTAL
+
+SLIDER
+54
+250
+262
+283
+user-radius-link-follow
+user-radius-link-follow
+1
+300
+10.0
+1
+1
+radius
+HORIZONTAL
+
+SLIDER
+66
+296
+238
+329
+chance-to-follow
+chance-to-follow
+1
+100
+5.0
+1
+1
+%
+HORIZONTAL
+
+SLIDER
+67
+342
+239
+375
+chance-to-block
+chance-to-block
+1
+100
+60.0
+1
+1
+%
+HORIZONTAL
+
+SLIDER
+67
+389
+249
+422
+hate-difference-to-block
+hate-difference-to-block
+0
+1
+0.2
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+72
+430
+244
+463
+hate-core-rate
+hate-core-rate
+0.1
+1
+0.4
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+68
+36
+240
+69
+initial-users
+initial-users
+20
+500
+213.0
+1
+1
+users
+HORIZONTAL
+
+SWITCH
+91
+80
+208
+113
+post-colors
+post-colors
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
