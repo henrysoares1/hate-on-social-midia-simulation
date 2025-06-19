@@ -152,6 +152,40 @@ to block-user [receiver poster]
   ]
 end
 
+to add-new-users
+  let current-users count users
+
+  if current-users < max-users [
+    let users-to-add random 3 + 1 ;
+
+    let available-slots max-users - current-users
+    set users-to-add min (list users-to-add available-slots)
+
+    create-users users-to-add [
+      let try 0
+      while [any? other users in-radius 0.5 and try < 100] [
+        setxy random-xcor random-ycor
+        set try try + 1
+      ]
+
+      ifelse any? other users in-radius 0.5 [
+        die
+      ]
+      [
+        set size 1
+        set shape "person"
+        set hate-core random-float 10
+        set followers []
+        set following []
+        set blocked []
+        set post-freq random-float 10
+        set birth-tick ticks
+        set-hate-color
+      ]
+    ]
+  ]
+end
+
 
 to go
 
@@ -161,6 +195,9 @@ to go
       user-post self
     ]
   ]
+
+  ; add new users
+  add-new-users
 
   ; follow new users
   follow-behavior
@@ -304,7 +341,7 @@ chance-to-block
 chance-to-block
 1
 100
-60.0
+70.0
 1
 1
 %
@@ -341,30 +378,45 @@ NIL
 HORIZONTAL
 
 SLIDER
-68
-36
-240
-69
+70
+49
+242
+82
 initial-users
 initial-users
 20
 500
-213.0
+29.0
 1
 1
 users
 HORIZONTAL
 
 SWITCH
-91
-80
-208
-113
+94
+97
+211
+130
 post-colors
 post-colors
 1
 1
 -1000
+
+SLIDER
+70
+10
+242
+43
+max-users
+max-users
+50
+500
+200.0
+1
+1
+users
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
