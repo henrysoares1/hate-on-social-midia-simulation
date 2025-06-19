@@ -8,6 +8,7 @@ users-own [
    following            ; who this user is following (it has to be a list)
    blocked              ; who this user is blocking (it has to be a list)
    post-freq            ; determines how much this user posts (0 = less chance to post, 10 = more chance to post)
+   birth-tick           ; set tick when he joyned
 
 ]
 
@@ -26,6 +27,7 @@ to setup-users
     set post-freq random-float 10
 
     set-hate-color
+    set birth-tick ticks
   ]
 end
 
@@ -105,7 +107,7 @@ end
 
 to follow-user [follower followed]
   ask follower [
-    if (follower != followed) and (not member? followed following) and (distance followed <= 10) and (not member? followed blocked) and (not member? follower [blocked] of followed)[
+    if (follower != followed) and (not member? followed following) and (distance followed <= 10) and (not member? followed blocked) and (not member? follower [blocked] of followed) and ((ticks - [birth-tick] of followed) < 50)[
       create-follows-link-to followed
       set following lput followed following
 
@@ -181,10 +183,10 @@ end
 
 to setup
   clear-all
+  reset-ticks
   setup-users
   link-usuarios
   layout-spring users follows-links 1 5 1
-  reset-ticks
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
