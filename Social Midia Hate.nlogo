@@ -63,7 +63,7 @@ to user-post [poster]
 
         ask follower [
 
-          let influence ([hate-core] of poster - hate-core) * hate-core-rate  ; 20% of diferente bettewen poster hate-core and receiver hate-core
+          let influence ([hate-core] of poster - hate-core) * hate-core-rate  ; % of diferente bettewen poster hate-core and receiver hate-core
           set hate-core hate-core + influence
 
           if hate-core > 10 [ set hate-core 10 ]
@@ -100,7 +100,7 @@ to set-hate-color
 end
 
 to remove-isolated-users
-  ask users with [ (length following = 0) and (length followers = 0) ] [
+  ask users with [ (length following = 0) and (length followers = 0) and (ticks - birth-tick) >= 50] [
     die
   ]
 end
@@ -152,6 +152,75 @@ to block-user [receiver poster]
   ]
 end
 
+to add-new-users
+  let current-users count users
+
+  if current-users < max-users [
+    let users-to-add random 3 + 1 ;
+
+    let available-slots max-users - current-users
+    set users-to-add min (list users-to-add available-slots)
+
+    create-users users-to-add [
+      let try 0
+      while [any? other users in-radius 0.5 and try < 100] [
+        setxy random-xcor random-ycor
+        set try try + 1
+      ]
+
+      ifelse any? other users in-radius 0.5 [
+        die
+      ]
+      [
+        set size 1
+        set shape "person"
+        set hate-core random-float 10
+        set followers []
+        set following []
+        set blocked []
+        set post-freq random-float 10
+        set birth-tick ticks
+        set-hate-color
+      ]
+    ]
+  ]
+end
+
+to remove-old-users
+  ask users [
+    let user-age ticks - birth-tick
+    if user-age >= max-age-user [
+      if random-float 100 < chance-to-delete [ ; 5% de chance
+        ; remover seguidores
+        foreach followers [
+          follower ->
+          ask follower [
+            set following remove myself following
+          ]
+        ]
+
+        ; remover quem ele segue
+        foreach following [
+          followed ->
+          ask followed [
+            set followers remove myself followers
+          ]
+        ]
+
+        ; remover links
+        ask follows-link-neighbors [
+          ask follows-link-with myself [
+            die
+          ]
+        ]
+
+        ; remover usuário
+        die
+      ]
+    ]
+  ]
+end
+
 
 to go
 
@@ -161,6 +230,9 @@ to go
       user-post self
     ]
   ]
+
+  ; add new users
+  add-new-users
 
   ; follow new users
   follow-behavior
@@ -176,7 +248,8 @@ to go
   if (ticks mod 10) = 0 [
     remove-isolated-users
   ]
-
+  ; remove users with high tick with % chance
+  remove-old-users
   tick
 end
 
@@ -304,7 +377,7 @@ chance-to-block
 chance-to-block
 1
 100
-60.0
+70.0
 1
 1
 %
@@ -341,30 +414,75 @@ NIL
 HORIZONTAL
 
 SLIDER
-68
-36
-240
-69
+70
+49
+242
+82
 initial-users
 initial-users
 20
 500
-213.0
+29.0
 1
 1
 users
 HORIZONTAL
 
 SWITCH
-91
-80
-208
-113
+94
+97
+211
+130
 post-colors
 post-colors
 1
 1
 -1000
+
+SLIDER
+70
+10
+242
+43
+max-users
+max-users
+50
+500
+113.0
+1
+1
+users
+HORIZONTAL
+
+SLIDER
+72
+479
+244
+512
+max-age-user
+max-age-user
+50
+5000
+5000.0
+1
+1
+tick
+HORIZONTAL
+
+SLIDER
+72
+523
+244
+556
+chance-to-delete
+chance-to-delete
+1
+100
+2.0
+1
+1
+%
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
