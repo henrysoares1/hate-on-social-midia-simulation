@@ -1,6 +1,23 @@
 breed [ users user ]
 directed-link-breed [ follows-links follows-link ]
 
+globals [
+  total-users
+  avg-followers
+  avg-following
+  isolated-users
+  avg-hate-core
+  min-hate-core
+  max-hate-core
+  total-blocks
+  posts-this-tick
+  post-freq-blue
+  post-freq-green
+  post-freq-yellow
+  post-freq-orange
+  post-freq-red
+]
+
 users-own [
    hate-core            ; how much hate this person has
 
@@ -191,7 +208,7 @@ to remove-old-users
     let user-age ticks - birth-tick
     if user-age >= max-age-user [
       if random-float 100 < chance-to-delete [ ; 5% de chance
-        ; remover seguidores
+        ; remove followers
         foreach followers [
           follower ->
           ask follower [
@@ -199,7 +216,7 @@ to remove-old-users
           ]
         ]
 
-        ; remover quem ele segue
+        ; remove follows
         foreach following [
           followed ->
           ask followed [
@@ -207,20 +224,112 @@ to remove-old-users
           ]
         ]
 
-        ; remover links
+        ; remove links
         ask follows-link-neighbors [
           ask follows-link-with myself [
             die
           ]
         ]
 
-        ; remover usuário
+        ; remove user
         die
       ]
     ]
   ]
 end
 
+to update-post-freq-by-color
+  set post-freq-blue mean-post-freq-of-color blue
+  set post-freq-green mean-post-freq-of-color green
+  set post-freq-yellow mean-post-freq-of-color yellow
+  set post-freq-orange mean-post-freq-of-color orange
+  set post-freq-red mean-post-freq-of-color red
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;; METRICS ;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+to report-metrics
+  set total-users count users
+
+  ifelse total-users > 0 [
+    set avg-followers mean [length followers] of users
+    set avg-following mean [length following] of users
+    set isolated-users count users with [length followers = 0 and length following = 0]
+    set avg-hate-core mean [hate-core] of users
+    set min-hate-core min [hate-core] of users
+    set max-hate-core max [hate-core] of users
+    set total-blocks sum [length blocked] of users
+  ] [
+    set avg-followers 0
+    set avg-following 0
+    set isolated-users 0
+    set avg-hate-core 0
+    set min-hate-core 0
+    set max-hate-core 0
+    set total-blocks 0
+  ]
+
+  ; contar posts feitos no tick atual
+  set posts-this-tick 0
+  ask users [
+    if post-freq > random-float 10 [
+      set posts-this-tick posts-this-tick + 1
+    ]
+  ]
+
+  show (word "Tick: " ticks)
+  show (word "Total users: " total-users)
+  show (word "Avg followers: " precision avg-followers 2)
+  show (word "Avg following: " precision avg-following 2)
+  show (word "Isolated users: " isolated-users)
+  show (word "Hate-core (avg/min/max): " precision avg-hate-core 2 " / " precision min-hate-core 2 " / " precision max-hate-core 2)
+  show (word "Total blocks: " total-blocks)
+  show (word "Posts this tick: " posts-this-tick)
+  show (word "====================================")
+end
+
+to-report mean-post-freq-of-color [cor]
+  let agents users with [color = cor]
+  ifelse any? agents [
+    report mean [post-freq] of agents
+  ] [
+    report 0
+  ]
+end
+
+to-report report-avg-hate-core
+  report avg-hate-core
+end
+
+to-report report-total-users
+  report total-users
+end
+
+to-report report-avg-followers
+  report avg-followers
+end
+
+to-report report-avg-following
+  report avg-following
+end
+
+to-report report-total-blocks
+  report total-blocks
+end
+
+to-report report-posts-this-tick
+  report posts-this-tick
+end
+
+to-report report-isolated-users
+  report isolated-users
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 to go
 
@@ -250,6 +359,8 @@ to go
   ]
   ; remove users with high tick with % chance
   remove-old-users
+  update-post-freq-by-color
+  report-metrics
   tick
 end
 
@@ -325,9 +436,9 @@ NIL
 
 SLIDER
 55
-205
+224
 260
-238
+257
 max-user-tick-to-follow
 max-user-tick-to-follow
 0
@@ -340,9 +451,9 @@ HORIZONTAL
 
 SLIDER
 54
-250
+263
 262
-283
+296
 user-radius-link-follow
 user-radius-link-follow
 1
@@ -354,10 +465,10 @@ radius
 HORIZONTAL
 
 SLIDER
-66
-296
-238
-329
+69
+300
+241
+333
 chance-to-follow
 chance-to-follow
 1
@@ -369,10 +480,10 @@ chance-to-follow
 HORIZONTAL
 
 SLIDER
-67
-342
-239
-375
+68
+337
+240
+370
 chance-to-block
 chance-to-block
 1
@@ -385,9 +496,9 @@ HORIZONTAL
 
 SLIDER
 67
-389
+372
 249
-422
+405
 hate-difference-to-block
 hate-difference-to-block
 0
@@ -399,10 +510,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-72
-430
-244
-463
+70
+408
+242
+441
 hate-core-rate
 hate-core-rate
 0.1
@@ -435,7 +546,7 @@ SWITCH
 130
 post-colors
 post-colors
-1
+0
 1
 -1000
 
@@ -455,10 +566,10 @@ users
 HORIZONTAL
 
 SLIDER
-72
+70
+446
+242
 479
-244
-512
 max-age-user
 max-age-user
 50
@@ -470,10 +581,10 @@ tick
 HORIZONTAL
 
 SLIDER
-72
-523
-244
-556
+70
+485
+242
+518
 chance-to-delete
 chance-to-delete
 1
@@ -483,6 +594,127 @@ chance-to-delete
 1
 %
 HORIZONTAL
+
+PLOT
+988
+15
+1315
+298
+hate-core
+Ticks
+People
+0.0
+250.0
+0.0
+350.0
+true
+true
+"set-plot-y-range 0 (max-users)" ""
+PENS
+"10-8" 1.0 0 -5298144 true "" "plot count turtles with [color = red]"
+"8-6" 1.0 0 -955883 true "" "plot count turtles with [color = orange]"
+"6-4" 1.0 0 -1184463 true "" "plot count turtles with [color = yellow]"
+"4-2" 1.0 0 -13840069 true "" "plot count turtles with [color = green]"
+"2-0" 1.0 0 -13345367 true "" "plot count turtles with [color = blue]"
+
+MONITOR
+1137
+509
+1201
+554
+avg-hate
+report-avg-hate-core
+5
+1
+11
+
+MONITOR
+1000
+509
+1075
+554
+Total users
+report-total-users
+5
+1
+11
+
+MONITOR
+999
+556
+1082
+601
+Avg. followers
+report-avg-followers
+5
+1
+11
+
+MONITOR
+999
+603
+1082
+648
+Avg. following
+report-avg-following
+5
+1
+11
+
+MONITOR
+1000
+649
+1076
+694
+Total blocks
+report-total-blocks
+5
+1
+11
+
+MONITOR
+1136
+556
+1225
+601
+Posts this tick
+report-posts-this-tick
+5
+1
+11
+
+MONITOR
+1137
+604
+1227
+649
+Isolated users
+report-isolated-users
+5
+1
+11
+
+PLOT
+992
+305
+1276
+504
+freq-post
+Ticks
+Freq
+0.0
+250.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"10-08" 1.0 0 -2674135 true "" "plot post-freq-red"
+"8-6" 1.0 0 -817084 true "" "plot post-freq-orange"
+"6-4" 1.0 0 -987046 true "" "plot post-freq-yellow"
+"4-2" 1.0 0 -11085214 true "" "plot post-freq-green"
+"2-0" 1.0 0 -13345367 true "" "plot post-freq-blue"
 
 @#$#@#$#@
 ## WHAT IS IT?
