@@ -63,7 +63,7 @@ to user-post [poster]
 
         ask follower [
 
-          let influence ([hate-core] of poster - hate-core) * hate-core-rate  ; 20% of diferente bettewen poster hate-core and receiver hate-core
+          let influence ([hate-core] of poster - hate-core) * hate-core-rate  ; % of diferente bettewen poster hate-core and receiver hate-core
           set hate-core hate-core + influence
 
           if hate-core > 10 [ set hate-core 10 ]
@@ -100,7 +100,7 @@ to set-hate-color
 end
 
 to remove-isolated-users
-  ask users with [ (length following = 0) and (length followers = 0) ] [
+  ask users with [ (length following = 0) and (length followers = 0) and (ticks - birth-tick) >= 50] [
     die
   ]
 end
@@ -186,6 +186,41 @@ to add-new-users
   ]
 end
 
+to remove-old-users
+  ask users [
+    let user-age ticks - birth-tick
+    if user-age >= max-age-user [
+      if random-float 100 < chance-to-delete [ ; 5% de chance
+        ; remover seguidores
+        foreach followers [
+          follower ->
+          ask follower [
+            set following remove myself following
+          ]
+        ]
+
+        ; remover quem ele segue
+        foreach following [
+          followed ->
+          ask followed [
+            set followers remove myself followers
+          ]
+        ]
+
+        ; remover links
+        ask follows-link-neighbors [
+          ask follows-link-with myself [
+            die
+          ]
+        ]
+
+        ; remover usuário
+        die
+      ]
+    ]
+  ]
+end
+
 
 to go
 
@@ -213,7 +248,8 @@ to go
   if (ticks mod 10) = 0 [
     remove-isolated-users
   ]
-
+  ; remove users with high tick with % chance
+  remove-old-users
   tick
 end
 
@@ -412,10 +448,40 @@ max-users
 max-users
 50
 500
-200.0
+113.0
 1
 1
 users
+HORIZONTAL
+
+SLIDER
+72
+479
+244
+512
+max-age-user
+max-age-user
+50
+5000
+5000.0
+1
+1
+tick
+HORIZONTAL
+
+SLIDER
+72
+523
+244
+556
+chance-to-delete
+chance-to-delete
+1
+100
+2.0
+1
+1
+%
 HORIZONTAL
 
 @#$#@#$#@
