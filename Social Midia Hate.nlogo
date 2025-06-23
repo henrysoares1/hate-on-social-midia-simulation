@@ -246,6 +246,104 @@ to update-post-freq-by-color
   set post-freq-red mean-post-freq-of-color red
 end
 
+to add-good-guy
+  create-users 1 [
+    let try 0
+    while [any? other users in-radius 0.5 and try < 100] [
+      setxy random-xcor random-ycor
+      set try try + 1
+    ]
+
+    ifelse any? other users in-radius 0.5 [
+      die
+    ]
+    [
+      set size 1
+      set shape "person"
+      set hate-core 0
+      set followers []
+      set following []
+      set blocked []
+      set post-freq 10
+      set birth-tick ticks
+      set-hate-color
+
+      let proximos other users in-radius user-radius-link-follow
+      let num-conexoes random 3 + 1 ;; conecta com até 3 usuários aleatórios
+
+      if any? proximos [
+        let alguns-proximos n-of min (list num-conexoes count proximos) proximos
+
+        ask n-of min (list num-conexoes count proximos) proximos [
+          create-follows-link-from myself
+          set followers lput myself followers
+          ask myself [
+            set following lput myself following
+          ]
+        ]
+      ]
+      ask proximos [
+        if not member? myself following and not member? myself blocked and not member? self [blocked] of myself [
+          create-follows-link-to myself
+          set following lput myself following
+          ask myself [
+            set followers lput myself followers
+          ]
+        ]
+      ]
+    ]
+  ]
+end
+
+to add-chaos-agent
+  create-users 1 [
+    let try 0
+    while [any? other users in-radius 0.5 and try < 100] [
+      setxy random-xcor random-ycor
+      set try try + 1
+    ]
+
+    ifelse any? other users in-radius 0.5 [
+      die
+    ]
+    [
+      set size 1
+      set shape "person"
+      set hate-core 10
+      set followers []
+      set following []
+      set blocked []
+      set post-freq 10
+      set birth-tick ticks
+      set-hate-color
+
+      let proximos other users in-radius user-radius-link-follow
+      let num-conexoes random 3 + 1 ;; conecta com até 3 usuários aleatórios
+
+      if any? proximos [
+        let alguns-proximos n-of min (list num-conexoes count proximos) proximos
+
+        ask n-of min (list num-conexoes count proximos) proximos [
+          create-follows-link-from myself
+          set followers lput myself followers
+          ask myself [
+            set following lput myself following
+          ]
+        ]
+      ]
+      ask proximos [
+        if not member? myself following and not member? myself blocked and not member? self [blocked] of myself [
+          create-follows-link-to myself
+          set following lput myself following
+          ask myself [
+            set followers lput myself followers
+          ]
+        ]
+      ]
+    ]
+  ]
+end
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;; METRICS ;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -374,10 +472,10 @@ to setup
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-311
-15
-979
-684
+305
+20
+973
+689
 -1
 -1
 20.0
@@ -488,7 +586,7 @@ chance-to-block
 chance-to-block
 1
 100
-70.0
+38.0
 1
 1
 %
@@ -546,7 +644,7 @@ SWITCH
 130
 post-colors
 post-colors
-0
+1
 1
 -1000
 
@@ -715,6 +813,40 @@ PENS
 "6-4" 1.0 0 -987046 true "" "plot post-freq-yellow"
 "4-2" 1.0 0 -11085214 true "" "plot post-freq-green"
 "2-0" 1.0 0 -13345367 true "" "plot post-freq-blue"
+
+BUTTON
+39
+181
+148
+214
+Add good guy
+add-good-guy
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+155
+181
+272
+214
+Add chaos agent
+add-chaos-agent
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
