@@ -117,7 +117,7 @@ to set-hate-color
 end
 
 to remove-isolated-users
-  ask users with [ (length following = 0) and (length followers = 0) and (ticks - birth-tick) >= 50] [
+  ask users with [ (length following = 0) and (length followers = 0) and (ticks - birth-tick) >= 100] [
     die
   ]
 end
@@ -440,6 +440,7 @@ to go
 
   ; add new users
   add-new-users
+  update-post-freq-by-color
 
   ; follow new users
   follow-behavior
@@ -450,14 +451,10 @@ to go
     set-hate-color
   ]
 
-  tick
   ; remove users without links
-  if (ticks mod 10) = 0 [
-    remove-isolated-users
-  ]
+  remove-isolated-users
   ; remove users with high tick with % chance
   remove-old-users
-  update-post-freq-by-color
   report-metrics
   tick
 end
@@ -571,7 +568,7 @@ chance-to-follow
 chance-to-follow
 1
 100
-5.0
+6.0
 1
 1
 %
@@ -586,7 +583,7 @@ chance-to-block
 chance-to-block
 1
 100
-38.0
+37.0
 1
 1
 %
@@ -672,7 +669,7 @@ max-age-user
 max-age-user
 50
 5000
-5000.0
+1595.0
 1
 1
 tick
